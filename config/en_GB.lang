@@ -30,7 +30,7 @@
 80=eighty
 90=ninety
 
-tu=$t0,$u
+tu=($t0),$u
 
 ## Hundreds
 h00=$h,hundred
