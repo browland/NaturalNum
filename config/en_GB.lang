@@ -30,28 +30,28 @@
 80=eighty
 90=ninety
 
-tu=($t0),$u
+tu=($t0),($u)
 
 ## Hundreds
-h00=$h,hundred
-h0u=$h,hundred,and,$u
-htu=$h,hundred,and,($tu)
+h00=($h),hundred
+h0u=($h),hundred,and,($u)
+htu=($h),hundred,and,($tu)
 
 ## Thousands
-T000=$T,thousand
-T00u=$T,thousand,and,$u
-T0tu=$T,thousand,and,($t$u)
-Thtu=$T,thousand,($h$t$u)
+T000=($T),thousand
+T00u=($T),thousand,and,($u)
+T0tu=($T),thousand,and,($t$u)
+Thtu=($T),thousand,($h$t$u)
 
 ## Tens of thousands
 ET000=($E$T),thousand
-ET00u=($E$T),thousand,and,$u
+ET00u=($E$T),thousand,and,($u)
 ET0tu=($E$T),thousand,and,($t$u)
 EThtu=($E$T),thousand,($h$t$u)
 
 ## Hundreds of tens of thousands
 HET000=($H$E$T),thousand
-HET00u=($H$E$T),thousand,and,$u
+HET00u=($H$E$T),thousand,and,($u)
 HET0tu=($H$E$T),thousand,and,($t$u)
 HEThtu=($H$E$T),thousand,($h$t$u)
 
