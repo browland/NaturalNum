@@ -21,10 +21,10 @@ class Rule:
 
 	def validateLhs(self):
 		"""Validates string in LHS of the rule.  All of the following must be true:
-         - not empty or null
-         - alphanumeric chars only i.e. [0-9a-Z]
-     	   - if alpha chars are present they must all be unique, as they will be
-   	     used as identifiers
+				- not empty or null
+				- alphanumeric chars only i.e. [0-9a-Z]
+				- if alpha chars are present they must all be unique, as they will be
+				  used as identifiers
 		"""	
 		# Ensure lhs is present
 		if (self.lhs == None or self.lhs == ""):
