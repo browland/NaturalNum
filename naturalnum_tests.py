@@ -42,8 +42,17 @@ class TestNaturalNum(unittest.TestCase):
 		self.assertEqual(False, naturalnum.validateLhsWithRhs("abc", "$a$b$d"))
 		self.assertEqual(True, naturalnum.validateLhsWithRhs("abc", "$a$b$c"))
 
-	#def testValidateRule(self):
+	def testValidateAndParseRule(self):
+		## These tests should always have a valid LHS and RHS, we're not testing LHS/RHS
+		## validations here
+
+		## Ensure commented lines validate OK
+		self.assertEqual((), naturalnum.validateAndParseRule("#this is a comment"))
+		self.assertEqual(("abc", "123"), naturalnum.validateAndParseRule("abc=123 #this is a comment"))
+
 		## Ensure only 2 sets of characters, delimited by '=' is allowed
+		self.assertEqual(None, naturalnum.validateAndParseRule("abcabc"))
+		self.assertEqual(("123a", "$a"), naturalnum.validateAndParseRule("123a=$a"))
 	
 if __name__ == '__main__':
 	unittest.main()

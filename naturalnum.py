@@ -2,6 +2,44 @@ import re
 
 lhsValidatorRegex = r"[0-9a-zA-Z]+"
 rhsValidatorRegex = r"[0-9a-zA-Z\(\),\$]+"  ## Only alphanumerics or these chars: (),$
+ruleValidatorRegex = r".+=.+"               ## At least one char each side of '=' delimiter
+
+def validateAndParseRule(rule):
+	"""Validates and parses entire rule.  Any characters after '#' are ignored.
+		If any characters remain, the remainder must have a '=' delimiter, surrounded by
+		a valid LHS and RHS (which will be validated by the corresponding functions).
+
+		Return values:
+		- If entire rule is valid, a tuple containing LHS and RHS will be returned
+		- If rule is invalid, None will be returned
+		- If rule was only a comment, an empty tuple will be returned
+	"""
+
+	# Get rule without comments, return () if rule is only a comment
+	commentCharPos = rule.find('#')
+	if commentCharPos != -1:
+		ruleWithoutComment = rule[:commentCharPos].rstrip()
+	else:
+		ruleWithoutComment = rule.rstrip()
+
+	if len(ruleWithoutComment) == 0:
+		return ()
+	
+	# Check that rule without comment is some chars, delimited by '='
+	if (re.match(ruleValidatorRegex, ruleWithoutComment) == None):
+		return None	
+
+	# Split rule into LHS and RHS and validate those separately
+	parts = ruleWithoutComment.split('=')
+	lhs = parts[0]
+	rhs = parts[1]
+	if validateLhs(lhs):
+		if validateRhs(rhs):
+			return (lhs, rhs)
+		else:	
+			return None
+	else:
+		return None
 
 def validateLhs(lhs):
 	"""Validates string in LHS of a rule.  All of the following must be true:
