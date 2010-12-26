@@ -3,6 +3,7 @@ import re
 lhsValidatorRegex = r"[0-9a-zA-Z]+"
 rhsValidatorRegex = r"[0-9a-zA-Z\(\),\$]+"  ## Only alphanumerics or these chars: (),$
 ruleValidatorRegex = r".+=.+"               ## At least one char each side of '=' delimiter
+rhsPlaceholderRegex = r"\$[A-Za-z]"         ## A '$' followed by an alpha char
 
 class Rule:
 	"""Holds all attributes of a Rule, 
@@ -17,6 +18,9 @@ class Rule:
 		self.validateLhs()
 		self.validateRhs()
 		self.validateLhsWithRhs()
+		self.buildLhsRegex()
+		self.buildLhsGroupDict()
+		self.buildRhsPattern()
 		self.initd = True
 
 	def validateLhs(self):
@@ -106,6 +110,48 @@ class Rule:
 			raise RuleValidationException("Could not validate Rule lhs [" + 
 				self.lhs + "] with rhs: [" + self.rhs + 
 				"] - placeholder(s) on rhs do not appear on lhs.")
+
+	def buildLhsRegex(self):
+		lhsRegex = "^"
+		for x in self.lhs:
+			if x.isdigit():
+				lhsRegex = lhsRegex + x
+			else:
+				lhsRegex = lhsRegex + "(.)"
+		lhsRegex = lhsRegex + "$"
+		self.lhsRegex = lhsRegex
+		self.lhsRegexPattern = re.compile(lhsRegex)
+
+	def buildLhsGroupDict(self):
+		"""Builds a dictionary of placeholder character to group number.
+		"""
+		self.lhsGroupDict = {}
+		alphas = [x for x in self.lhs if not x.isdigit()]
+		count = 1
+		for x in alphas:
+			self.lhsGroupDict[x] = count
+			count = count + 1
+
+	def buildRhsPattern(self):
+		"""Builds the pattern for the resulting output string for this rule.
+			In the simplest case this will just be a literal string.
+			In more complex cases, it will include backreferences to
+			digits in the lhsRegex, and brackets which signify that the
+			contents should be resolved recursively.
+
+			The backreferences will be specified with respect to the 
+			corresponding group in lhsRegex.  Everything else is done
+			at run-time.
+		"""
+		## Replace all instances of \$[A-Za-z] with a backreference to the 
+		## group number in the LHS regex.
+		tempRhsPattern = self.rhs
+		rhsPlaceholderSearchPatt = re.compile(rhsPlaceholderRegex)
+		for match in re.finditer(rhsPlaceholderSearchPatt, self.rhs):
+			matchedVal = self.rhs[match.start():match.end()]
+			backref = "\\" + str(self.lhsGroupDict[matchedVal[1:]])
+			tempRhsPattern = tempRhsPattern.replace(matchedVal, backref)
+		self.rhsPattern = tempRhsPattern
 
 class RuleValidationException(Exception):
 	def __init__(self, value):

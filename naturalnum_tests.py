@@ -59,8 +59,9 @@ class TestNaturalNum(unittest.TestCase):
 			self.fail("Should not raise RuleValidationException")
 
 	def testValidateAndParseRule(self):
-		## These tests should always have a valid LHS and RHS, we're not testing LHS/RHS
-		## validations here
+		## Here we are only testing the function which drives Rule creation from a raw
+		## string, not the internals of the Rule creation (validation etc).		
+		## Therefore these tests should always have a valid LHS and RHS.
 
 		## Ensure commented lines validate OK
 		self.assertEqual(None, validateAndParseRule("#this is a comment"))
@@ -74,6 +75,36 @@ class TestNaturalNum(unittest.TestCase):
 		rule = validateAndParseRule("123a=$a")
 		self.assertEqual("123a", rule.lhs)
 		self.assertEqual("$a", rule.rhs)
+
+	def testBuildLhsRegex(self):
+		rule = Rule("123", "one hundred and twenty three")
+		rule.init()
+		self.assertEqual("^123$", rule.lhsRegex)
+		self.assertFalse(rule.lhsRegexPattern == None)
+
+		rule = Rule("1tu", "one hundred and etc")
+		rule.init()
+		self.assertEqual("^1(.)(.)$", rule.lhsRegex)		
+		self.assertFalse(rule.lhsRegexPattern == None)
+
+	def testBuildLhsGroupDict(self):
+		rule = Rule("1tu", "one hundred and etc")
+		rule.init()
+		self.assertEquals(rule.lhsGroupDict['t'], 1)
+		self.assertEquals(rule.lhsGroupDict['u'], 2)
+
+	def testBuildRhsPattern(self):
+		rule = Rule("123", "one, hundred, and, twenty, three")
+		rule.init()
+		self.assertEqual("one, hundred, and, twenty, three", rule.rhsPattern)
+
+		rule = Rule("htu", "($h$t$u)")
+		rule.init()
+		self.assertEqual(r"(\1\2\3)", rule.rhsPattern)
+
+		rule = Rule("htu", "$h,100,and($t$u)")
+		rule.init()
+		self.assertEqual(r"\1,100,and(\2\3)", rule.rhsPattern)
 
 if __name__ == '__main__':
 	unittest.main()
