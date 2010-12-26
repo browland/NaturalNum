@@ -57,3 +57,25 @@ def validateRhs(rhs):
 					return False
 				checkNextIsAlpha = False 
 	return True
+
+def validateLhsWithRhs(lhs, rhs):
+	# Check all placeholders on RHS appear on LHS
+	# 1. Find set of all LHS placeholders
+	lhsPlaceholders = set([x for x in lhs if not x.isdigit()])
+
+	# 2. Find set of all RHS placeholders
+	placeholderDetected = False
+	rhsPlaceholdersList = []	
+	for x in rhs:
+		if x == '$':
+			placeholderDetected = True
+		else:
+			if placeholderDetected:
+				rhsPlaceholdersList.append(x)
+				placeholderDetected = False
+	rhsPlaceholders = set(rhsPlaceholdersList)
+	
+	# 3. Check RHS placeholders is a subset of LHS placeholders (not necessarily vice-versa)
+	if not rhsPlaceholders <= lhsPlaceholders:
+		return False
+	return True

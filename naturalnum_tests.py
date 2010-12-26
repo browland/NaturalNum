@@ -36,7 +36,14 @@ class TestNaturalNum(unittest.TestCase):
 		self.assertEqual(False, naturalnum.validateRhs("$("))
 		self.assertEqual(True, naturalnum.validateRhs("$a"))
 
-	#def testValidateLhsAndRhs(self):
+	def testValidateLhsWithRhs(self):
+		## Ensure all chars on RHS preceded by $ appear on LHS
+		self.assertEqual(False, naturalnum.validateLhsWithRhs("a", "$d"))
+		self.assertEqual(False, naturalnum.validateLhsWithRhs("abc", "$a$b$d"))
+		self.assertEqual(True, naturalnum.validateLhsWithRhs("abc", "$a$b$c"))
+
+	#def testValidateRule(self):
+		## Ensure only 2 sets of characters, delimited by '=' is allowed
 	
 if __name__ == '__main__':
 	unittest.main()
