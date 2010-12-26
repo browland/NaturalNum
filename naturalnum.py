@@ -153,11 +153,27 @@ class Rule:
 			tempRhsPattern = tempRhsPattern.replace(matchedVal, backref)
 		self.rhsPattern = tempRhsPattern
 
+	def matches(self, value):
+		"""Returns True if the whole of 'value' matches this rule, else False"""
+		return self.lhsRegexPattern.match(value)
+
 class RuleValidationException(Exception):
 	def __init__(self, value):
 		self.value = value
 	def __str__(self):
 		return repr(self.value)
+
+class RuleList:
+	def __init__(self):
+		self.rules = []
+
+	def add(self, rule):
+		self.rules.append(rule)
+
+	def search(self, value):
+		for rule in self.rules:
+			if rule.matches(value):
+				return rule			
 
 def validateAndParseRule(rule):
 	"""Validates and parses entire rule string, returning it as a Rule object.  

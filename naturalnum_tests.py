@@ -102,9 +102,29 @@ class TestNaturalNum(unittest.TestCase):
 		rule.init()
 		self.assertEqual(r"(\1\2\3)", rule.rhsPattern)
 
-		rule = Rule("htu", "$h,100,and($t$u)")
+		rule = Rule("htu", "$h,100,and,($t$u)")
 		rule.init()
-		self.assertEqual(r"\1,100,and(\2\3)", rule.rhsPattern)
+		self.assertEqual(r"\1,100,and,(\2\3)", rule.rhsPattern)
+
+	def testRuleMatches(self):
+		rule = Rule("htu", "($h$t$u)")
+		rule.init()
+		self.assertTrue(rule.matches("123"))
+		self.assertFalse(rule.matches("12"))
+
+	def testRuleListSearch(self):
+		ruleList = RuleList()
+		rule = Rule("h", "test")
+		rule.init()
+		ruleList.add(rule)
+		rule = Rule("ht", "test")
+		rule.init()
+		ruleList.add(rule)		
+		rule = Rule("htu", "test")
+		rule.init()
+		ruleList.add(rule)
+		rule = ruleList.search("123")
+		self.assertEquals("htu", rule.lhs)
 
 if __name__ == '__main__':
 	unittest.main()
