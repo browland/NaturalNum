@@ -20,7 +20,9 @@ class Rule:
 		self.validateLhsWithRhs()
 		self.buildLhsRegex()
 		self.buildLhsGroupDict()
-		self.buildRhsPattern()
+		self.buildRhsWithBackrefs()
+		self.splitRhsTokens()
+		self.validateRhsTokenList()
 		self.initd = True
 
 	def validateLhs(self):
@@ -47,6 +49,10 @@ class Rule:
 				raise RuleValidationException("Could not validate lhs of Rule: [" + 
 					self.lhs + "].  Alpha characters must be unique.")
 
+	def splitRhsTokens(self):
+		"""Splits rhs string into a list of tokens, separated by ',' delimiter"""
+		self.rhsTokenList = self.rhsWithBackrefs.split(',')
+
 	def validateRhs(self):
 		"""Validates string in RHS of a rule.  All of the following must be true:
 			- Not empty or null
@@ -62,18 +68,6 @@ class Rule:
 		if (re.match(rhsValidatorRegex, self.rhs) == None):
 			raise RuleValidationException("Could not validate rhs of Rule: [" + 
 				self.rhs + "].  Only alpha/digits or the following chars allowed: (),$")
-
-		# Check brackets are balanced
-		depth = 0
-		brackets = [x for x in self.rhs if x in ('(', ')')]
-		for x in brackets:
-			if x == '(':
-				depth = depth + 1
-			else:
-				depth = depth - 1
-		if depth != 0:
-			raise RuleValidationException("Could not validate rhs of Rule: [" + 
-				self.rhs + "] - brackets are unbalanced.")
 	
 		# Check '$' only precedes an alpha character
 		checkNextIsAlpha = False
@@ -86,6 +80,21 @@ class Rule:
 						raise RuleValidationException("Could not validate rhs of Rule: [" + 
 							self.rhs + "].  '$' must always be folowed by an alpha char.")
 					checkNextIsAlpha = False
+
+	def validateRhsTokenList(self):
+		""""""
+		# Check that if brackets exist, they are at the start/end positions
+		
+		for token in self.rhsTokenList:
+			pos = 0
+			for x in token:
+				if x == '(' and not pos == 0: 				
+					raise RuleValidationException("Could not validate rhs token: [" + 
+						token + "] - can only start recursion at beginning of token.")
+				elif x == ')' and not pos == len(token)-1:
+					raise RuleValidationException("Could not validate rhs token: [" + 
+						token + "] - can only end recursion at end of token.")
+				pos = pos + 1
 
 	def validateLhsWithRhs(self):
 		# Check all placeholders on RHS appear on LHS
@@ -110,7 +119,7 @@ class Rule:
 			raise RuleValidationException("Could not validate Rule lhs [" + 
 				self.lhs + "] with rhs: [" + self.rhs + 
 				"] - placeholder(s) on rhs do not appear on lhs.")
-
+		
 	def buildLhsRegex(self):
 		lhsRegex = "^"
 		for x in self.lhs:
@@ -132,7 +141,7 @@ class Rule:
 			self.lhsGroupDict[x] = count
 			count = count + 1
 
-	def buildRhsPattern(self):
+	def buildRhsWithBackrefs(self):
 		"""Builds the pattern for the resulting output string for this rule.
 			In the simplest case this will just be a literal string.
 			In more complex cases, it will include backreferences to
@@ -145,19 +154,35 @@ class Rule:
 		"""
 		## Replace all instances of \$[A-Za-z] with a backreference to the 
 		## group number in the LHS regex.
-		tempRhsPattern = self.rhs
+		rhsWithBackrefs = self.rhs
 		rhsPlaceholderSearchPatt = re.compile(rhsPlaceholderRegex)
+
 		for match in re.finditer(rhsPlaceholderSearchPatt, self.rhs):
 			matchedVal = self.rhs[match.start():match.end()]
 			backref = "\\" + str(self.lhsGroupDict[matchedVal[1:]])
-			tempRhsPattern = tempRhsPattern.replace(matchedVal, backref)
-		self.rhsPattern = tempRhsPattern
+			rhsWithBackrefs = rhsWithBackrefs.replace(matchedVal, backref)
+		self.rhsWithBackrefs = rhsWithBackrefs
 
 	def matches(self, value):
 		"""Returns True if the whole of 'value' matches this rule, else False"""
 		return self.lhsRegexPattern.match(value)
 
+	def resolve(self, value):
+		if not self.matches(value):
+			raise RuleUsageException("Rule does not match value, cannot resolve")
+		tokenList = []
+		for rhsToken in self.rhsTokenList:
+			resolvedRhsToken = self.lhsRegexPattern.sub(rhsToken, value)
+			tokenList.append(resolvedRhsToken)
+		return tokenList
+
 class RuleValidationException(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
+
+class RuleUsageException(Exception):
 	def __init__(self, value):
 		self.value = value
 	def __str__(self):
@@ -174,6 +199,25 @@ class RuleList:
 		for rule in self.rules:
 			if rule.matches(value):
 				return rule			
+
+class RuleEngine:
+	def __init__(self, ruleList):
+		self.ruleList = ruleList
+
+	def resolve(self, value):
+		matchedRule = self.ruleList.search(value)
+		if not matchedRule == None:
+			rhsTokens = matchedRule.resolve(value)
+			rhsTokensFollowingRecursion = []
+			for rhsToken in rhsTokens:
+				if rhsToken[0:1] == '(' and rhsToken[-1:] == ')':
+					rhsTokensFollowingRecursion = rhsTokensFollowingRecursion + \
+						self.resolve(rhsToken[1:-1])
+				else:
+					rhsTokensFollowingRecursion.append(rhsToken)					
+			return rhsTokensFollowingRecursion
+		else:
+			return None
 
 def validateAndParseRule(rule):
 	"""Validates and parses entire rule string, returning it as a Rule object.  

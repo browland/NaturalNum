@@ -22,6 +22,11 @@ class TestNaturalNum(unittest.TestCase):
 		self.assertRaises(RuleValidationException, Rule("hh", None).validateLhs)
 		self.assertRaises(RuleValidationException, Rule("h1h", None).validateLhs)
 
+	def testSplitRhsTokens(self):
+		rule = Rule("123", "one,hundred,and,twenty,three")
+		rule.init()
+		self.assertEquals(5, len(rule.rhsTokenList))
+
 	def testValidateRhs(self):
 		## Ensure only alphanumerics, '(', ')', ',', '$' allowed
 		self.assertRaises(RuleValidationException, Rule(None, "").validateRhs)
@@ -33,14 +38,6 @@ class TestNaturalNum(unittest.TestCase):
 		except RuleValidationException:
 			self.fail("Should not raise RuleValidationException")
 
-		## Ensure only balanced brackets allowed
-		self.assertRaises(RuleValidationException, Rule(None, "((").validateRhs)
-		self.assertRaises(RuleValidationException, Rule(None, "()(").validateRhs)
-		try:		
-			Rule(None, "()()").validateRhs()
-		except RuleValidationException:
-			self.fail("Should not raise RuleValidationException")
-
 		## Ensure '$' only used in correct context (followed by alpha character)
 		self.assertRaises(RuleValidationException, Rule(None, "$1").validateRhs)
 		self.assertRaises(RuleValidationException, Rule(None, "$(").validateRhs)
@@ -49,6 +46,17 @@ class TestNaturalNum(unittest.TestCase):
 		except RuleValidationException:
 			self.fail("Should not raise RuleValidationException")
 
+	def testValidateRhsTokenList(self):
+		## Ensure brackets only allowed to encompass an entire token
+		rule = Rule("htu", "$h,100,test($t$u)")
+		self.assertRaises(RuleValidationException, rule.init)
+
+		rule = Rule("htu", "$h,100,($t$u)")
+		try:
+			rule.init()
+		except RuleValidationException:
+			self.fail("Should not raise RuleValidationException")
+		
 	def testValidateLhsWithRhs(self):
 		## Ensure all chars on RHS preceded by $ appear on LHS
 		self.assertRaises(RuleValidationException, Rule("a", "$d").validateLhsWithRhs)
@@ -93,24 +101,30 @@ class TestNaturalNum(unittest.TestCase):
 		self.assertEquals(rule.lhsGroupDict['t'], 1)
 		self.assertEquals(rule.lhsGroupDict['u'], 2)
 
-	def testBuildRhsPattern(self):
+	def testBuildRhsWithBackrefs(self):
 		rule = Rule("123", "one, hundred, and, twenty, three")
 		rule.init()
-		self.assertEqual("one, hundred, and, twenty, three", rule.rhsPattern)
+		self.assertEqual("one, hundred, and, twenty, three", rule.rhsWithBackrefs)
 
 		rule = Rule("htu", "($h$t$u)")
 		rule.init()
-		self.assertEqual(r"(\1\2\3)", rule.rhsPattern)
+		self.assertEqual(r"(\1\2\3)", rule.rhsWithBackrefs)
 
 		rule = Rule("htu", "$h,100,and,($t$u)")
 		rule.init()
-		self.assertEqual(r"\1,100,and,(\2\3)", rule.rhsPattern)
+		self.assertEqual(r"\1,100,and,(\2\3)", rule.rhsWithBackrefs)
 
 	def testRuleMatches(self):
 		rule = Rule("htu", "($h$t$u)")
 		rule.init()
 		self.assertTrue(rule.matches("123"))
 		self.assertFalse(rule.matches("12"))
+
+	def testRuleResolve(self):
+		rule = Rule("htu", "$h$t$u")
+		rule.init()
+		rhsTokens = rule.resolve("123")
+		self.assertEquals(["123"], rhsTokens)
 
 	def testRuleListSearch(self):
 		ruleList = RuleList()
@@ -125,6 +139,34 @@ class TestNaturalNum(unittest.TestCase):
 		ruleList.add(rule)
 		rule = ruleList.search("123")
 		self.assertEquals("htu", rule.lhs)
+
+	def testRuleEngineSearch(self):
+		## non-recursive
+		ruleList = RuleList()
+		rule = Rule("h", "test")
+		rule.init()
+		ruleList.add(rule)
+		rule = Rule("ht", "test")
+		rule.init()
+		ruleList.add(rule)		
+		rule = Rule("htu", "test")
+		rule.init()
+		ruleList.add(rule)
+		ruleEngine = RuleEngine(ruleList)
+		result = ruleEngine.resolve("123")
+		self.assertEquals(["test"], result)
+		
+		## recursive
+		ruleList = RuleList()
+		rule = Rule("tu", "twenty,one")
+		rule.init()
+		ruleList.add(rule)		
+		rule = Rule("htu", "three,hundred,and,($t$u)")
+		rule.init()
+		ruleList.add(rule)
+		ruleEngine = RuleEngine(ruleList)
+		result = ruleEngine.resolve("321")
+		self.assertEquals(["three","hundred","and","twenty","one"], result)
 
 if __name__ == '__main__':
 	unittest.main()
