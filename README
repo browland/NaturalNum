@@ -259,13 +259,13 @@ h0u=$h,100,and,$u                  ## Hundreds and unit with no tens
                                    ## (e.g. 709 = 7.wav, 100.wav, and.wav, 
                                    ## 9.wav)
 htu=$h,100,and,($t$u)              ## Hundreds and tens and units - tens
-								   ## and units are deferred to a matching
-								   ## rule
+                                   ## and units are deferred to a matching
+                                   ## rule
                                    ## e.g. 546 = 5.wav, 
-								   ##            100.wav, 
-								   ##            and.wav, 
+                                   ##            100.wav, 
+                                   ##            and.wav, 
                                    ##            (56)
-								   ##              = 50.wav, 6.wav
+                                   ##              = 50.wav, 6.wav
 								   
 The single and double digits are specified as in the previous example.  But 
 there are now only three rules for three digits, instead of five.  This doesn't 
