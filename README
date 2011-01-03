@@ -6,6 +6,22 @@ full internationalization.  E.g. "2100" can be mapped to
 "two thousand one hundred", "deux mille cent", "2.wav,1000.wav,1.wav,100.wav", 
 or any other representation, according to rules-based configuration.
 
+Quick Start
+-----------
+
+The script example.py provides an example usage of the library, allowing command
+line evaluation of natural language.  E.g.:
+
+python example.py
+Usage: example.py <integer to translate> <locale code>
+python example.py 123456 fr_FR
+['cent', 'vingt', 'trois', 'mille', 'quatre', 'cent', 'cinquante', 'six']
+python example.py 123456 en_GB
+['one', 'hundred', 'and', 'twenty', 'three', 'thousand', 'four', 'hundred', 'and', 'fifty', 'six']
+
+The locale code must match a file in the config directory.
+example.py can be used as a starting point to use the library any way you want.
+
 Motivation
 ----------
 
