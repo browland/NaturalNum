@@ -1,10 +1,25 @@
 import unittest
 from naturalnum import *
+import logging.config
+
+## Set up logging
+logging.config.fileConfig("logging.conf")
+
+# create logger for tests
+logger = logging.getLogger("naturalnum_tests")
 
 class TestNaturalNum(unittest.TestCase):
 	#def setUp(self):
+
+	def testLoadConfig(self):
+		logger.info("testLoadConfig()")
+		## Trigger load of valid config file and ensure everything is set up
+		cfgFilename = "config/en_GB.lang"  # todo create seperate test config file
+		ruleEngine = RuleEngine.fromLangFilename(cfgFilename)
+		self.assertEquals(44, len(ruleEngine.ruleList))
 		
 	def testValidateLhs(self):
+		logger.info("testValidateLhs()")
 		## Ensure only alphanumerics allowed
 		self.assertRaises(RuleValidationException, Rule("", None).validateLhs)
 		self.assertRaises(RuleValidationException, Rule(None, None).validateLhs)
@@ -33,8 +48,10 @@ class TestNaturalNum(unittest.TestCase):
 		self.assertRaises(RuleValidationException, Rule(None, None).validateRhs)
 		self.assertRaises(RuleValidationException, Rule(None, ".").validateRhs)
 		self.assertRaises(RuleValidationException, Rule(None, " ").validateRhs)
+
+		## Success scenario
 		try:
-			Rule(None, "Aa1(),$").validateRhs()
+			Rule(None, "123($a$b),123,(123)").validateRhs()
 		except RuleValidationException:
 			self.fail("Should not raise RuleValidationException")
 
@@ -45,6 +62,10 @@ class TestNaturalNum(unittest.TestCase):
 			Rule(None, "$a").validateRhs()
 		except RuleValidationException:
 			self.fail("Should not raise RuleValidationException")
+			
+		## Ensure we fail if the token to be recursed would not result in digits 
+		## only, e.g. missing $ symbol.
+		self.assertRaises(RuleValidationException, Rule(None, "($ab)").validateRhs)		
 
 	def testValidateRhsTokenList(self):
 		## Ensure brackets only allowed to encompass an entire token
@@ -108,11 +129,11 @@ class TestNaturalNum(unittest.TestCase):
 
 		rule = Rule("htu", "($h$t$u)")
 		rule.init()
-		self.assertEqual(r"(\1\2\3)", rule.rhsWithBackrefs)
+		self.assertEqual(r"(\g<1>\g<2>\g<3>)", rule.rhsWithBackrefs)
 
 		rule = Rule("htu", "$h,100,and,($t$u)")
 		rule.init()
-		self.assertEqual(r"\1,100,and,(\2\3)", rule.rhsWithBackrefs)
+		self.assertEqual(r"\g<1>,100,and,(\g<2>\g<3>)", rule.rhsWithBackrefs)
 
 	def testRuleMatches(self):
 		rule = Rule("htu", "($h$t$u)")
@@ -167,6 +188,10 @@ class TestNaturalNum(unittest.TestCase):
 		ruleEngine = RuleEngine(ruleList)
 		result = ruleEngine.resolve("321")
 		self.assertEquals(["three","hundred","and","twenty","one"], result)
+		
+	def testRuleEngineResolve(self):
+		eng = RuleEngine.fromLangFilename("config/en_GB.lang")
+		self.assertEquals(["one", "thousand", "two", "hundred", "and", "thirty", "four"], eng.resolve("1234"))
 
 if __name__ == '__main__':
 	unittest.main()

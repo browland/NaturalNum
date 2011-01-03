@@ -1,9 +1,20 @@
 import re
+import logging
 
 lhsValidatorRegex = r"[0-9a-zA-Z]+"
-rhsValidatorRegex = r"[0-9a-zA-Z\(\),\$]+"  ## Only alphanumerics or these chars: (),$
+rhsValidatorRegex = r"[0-9a-zA-Z\(\),\$-]+"  ## Only alphanumerics (inc. hyphen) or these chars: (),$
 ruleValidatorRegex = r".+=.+"               ## At least one char each side of '=' delimiter
 rhsPlaceholderRegex = r"\$[A-Za-z]"         ## A '$' followed by an alpha char
+
+## Set up logging (users will set up their own handlers)
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+        
+logger = logging.getLogger("naturalnum")
+logger.setLevel(logging.DEBUG)
+h = NullHandler()
+logger.addHandler(h)
 
 class Rule:
 	"""Holds all attributes of a Rule, 
@@ -58,11 +69,14 @@ class Rule:
 			- Not empty or null
 			- Only alphanumeric chars, or any of: (),$
 			- Brackets must be balanced
+			- Anything within brackets should resolve to digits
 		"""
 		# Check rhs is present
 		if (self.rhs == None or self.rhs == ""):
-			raise RuleValidationException("Could not validate rhs of Rule: [" + 
+			raise RuleValidationException("Could not validate rhs of Rule: [" +
 				"" if self.rhs is None else self.rhs + "] because it is empty.")
+	   
+		logger.debug("Validating rhs: " + self.rhs)
 	
 		# Check only allowed chars present
 		if (re.match(rhsValidatorRegex, self.rhs) == None):
@@ -80,6 +94,16 @@ class Rule:
 						raise RuleValidationException("Could not validate rhs of Rule: [" + 
 							self.rhs + "].  '$' must always be folowed by an alpha char.")
 					checkNextIsAlpha = False
+					
+		# Ensure everything within brackets is either digits or digivars
+		withinBracketsSearchPatt = re.compile("\\(.*?\\)")  # todo move to constant
+		for match in re.finditer(withinBracketsSearchPatt, self.rhs):
+			matchedVal = self.rhs[match.start()+1:match.end()-1]
+			logger.debug("Checking rhs token within brackets [" + matchedVal + "] is digits or digivars")
+			digitsOrDigivarsPatt = re.compile("^(\\$[a-zA-Z]|[0-9])+$")  # todo move to constant
+			if digitsOrDigivarsPatt.match(matchedVal) == None:
+				raise RuleValidationException \
+					("Bracketed terms must contain only digits or digivars")
 
 	def validateRhsTokenList(self):
 		""""""
@@ -143,23 +167,38 @@ class Rule:
 
 	def buildRhsWithBackrefs(self):
 		"""Builds the pattern for the resulting output string for this rule.
-			In the simplest case this will just be a literal string.
-			In more complex cases, it will include backreferences to
-			digits in the lhsRegex, and brackets which signify that the
-			contents should be resolved recursively.
-
-			The backreferences will be specified with respect to the 
-			corresponding group in lhsRegex.  Everything else is done
-			at run-time.
+			This can either be a single token, e.g.:
+			1=one
+			or a list of tokens (just a comma-separated string at this stage),
+			e.g.:
+			21=twenty,one
+			In more complex cases (when we want to capture digits from the lhs
+			and feed them back into the rule engine), we will replace instances
+			of $<digivar> on the rhs with the appropriate regex backreference.
+			E.g. for:
+			tu=$t0,u
+			The resulting rhs expression will be: \\g<1>0,\\g<2>
+			So '21' would be replaced with 20,1.  Note the use of g<num> format
+			for regex backreferences, this is to disambiguate cases such as 
+			\\10 - which should be interpreted as backreference to group number 1,
+			followed by a literal 0, not as a backreference to group number 10.
+			 
+			Additionally, when recursion is to be used upon a token (the resulting 
+			rhs token should be fed back into the rule engine), the rhs expression 
+			is enclosed in parentheses, e.g.:
+			tu=($t0),($u)
+			would result in each of the two rhs tokens being fed back through the
+			rule engine, and being replaced with the result.  This strategy allows
+			reuse among rules.
 		"""
-		## Replace all instances of \$[A-Za-z] with a backreference to the 
-		## group number in the LHS regex.
+		## Replace all instances of "$<char>" in rhs expression with a 
+		## backreference to the group number matching that char in the LHS regex.
 		rhsWithBackrefs = self.rhs
 		rhsPlaceholderSearchPatt = re.compile(rhsPlaceholderRegex)
 
 		for match in re.finditer(rhsPlaceholderSearchPatt, self.rhs):
 			matchedVal = self.rhs[match.start():match.end()]
-			backref = "\\" + str(self.lhsGroupDict[matchedVal[1:]])
+			backref = "\\g<" + str(self.lhsGroupDict[matchedVal[1:]]) + ">"
 			rhsWithBackrefs = rhsWithBackrefs.replace(matchedVal, backref)
 		self.rhsWithBackrefs = rhsWithBackrefs
 
@@ -172,9 +211,14 @@ class Rule:
 			raise RuleUsageException("Rule does not match value, cannot resolve")
 		tokenList = []
 		for rhsToken in self.rhsTokenList:
+			logger.debug("replacing [" + value + "] with [" + rhsToken + \
+				"] in context of match regex [" + self.lhsRegex + "]")
 			resolvedRhsToken = self.lhsRegexPattern.sub(rhsToken, value)
 			tokenList.append(resolvedRhsToken)
 		return tokenList
+		
+	def __str__(self):
+		return "[" + self.lhs + "=" + self.rhs + "], [" + self.lhsRegex + "=" + self.rhsWithBackrefs + "]"
 
 class RuleValidationException(Exception):
 	def __init__(self, value):
@@ -187,10 +231,19 @@ class RuleUsageException(Exception):
 		self.value = value
 	def __str__(self):
 		return repr(self.value)
+		
+class RuleEvaluationException(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
 
 class RuleList:
 	def __init__(self):
 		self.rules = []
+		
+	def __len__(self):
+		return len(self.rules)
 
 	def add(self, rule):
 		self.rules.append(rule)
@@ -204,19 +257,49 @@ class RuleEngine:
 	def __init__(self, ruleList):
 		self.ruleList = ruleList
 
+	@classmethod
+	def fromLangFilename(cls, fileName):
+		logger.debug("fromLangFilename()")
+		f = open(fileName, 'r')
+		logger.debug("opened config file [" + fileName + "]")
+		ruleList = RuleList()
+		for line in f:
+			logger.debug("read line: [" + line[0:-1] + "]")
+			rule = validateAndParseRule(line)
+			if rule != None:
+				logger.debug("Adding Rule to RuleList")
+				ruleList.add(rule)
+			else:
+				logger.debug("No rule found, skipping this line")
+		re = RuleEngine(ruleList)
+		logger.debug("finished loading RuleEngine")
+		return re
+
 	def resolve(self, value):
+		logger.debug("resolve() value=[" + value + "]")
 		matchedRule = self.ruleList.search(value)
 		if not matchedRule == None:
+			logger.debug("found matched rule: " + str(matchedRule))
 			rhsTokens = matchedRule.resolve(value)
 			rhsTokensFollowingRecursion = []
 			for rhsToken in rhsTokens:
+				## If current rhs token is enclosed in brackets, replace it with
+				## the result of feeding the value (without brackets) back through
+				## the rule engine.
 				if rhsToken[0:1] == '(' and rhsToken[-1:] == ')':
+					rhsTokenToRecurse = rhsToken[1:-1]
+					logger.debug("Recursing value [" + rhsTokenToRecurse + "] back through rule engine")
+					resultAfterRecursion = self.resolve(rhsTokenToRecurse)
+					if resultAfterRecursion == None:
+						raise RuleEvaluationException("Could not match fragment of result [" + \
+							rhsTokenToRecurse + "] to a rule")	
 					rhsTokensFollowingRecursion = rhsTokensFollowingRecursion + \
-						self.resolve(rhsToken[1:-1])
+						resultAfterRecursion
 				else:
 					rhsTokensFollowingRecursion.append(rhsToken)					
 			return rhsTokensFollowingRecursion
 		else:
+			logger.debug("could not find matching rule")
 			return None
 
 def validateAndParseRule(rule):
@@ -230,6 +313,7 @@ def validateAndParseRule(rule):
 		- If rule is invalid, a RuleValidationException will be raised
 		- If rule was only a comment, None will be returned
 	"""
+	logger.debug("validateAndParseRule()")
 
 	# Get rule without comments, return None if rule is only a comment
 	commentCharPos = rule.find('#')

@@ -35,7 +35,7 @@ tu=($t0),($u)
 ## Hundreds
 h00=($h),hundred
 h0u=($h),hundred,and,($u)
-htu=($h),hundred,and,($tu)
+htu=($h),hundred,and,($t$u)
 
 ## Thousands
 T000=($T),thousand
