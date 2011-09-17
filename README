@@ -9,18 +9,23 @@ or any other representation, according to rules-based configuration.
 Quick Start
 -----------
 
-The script example.py provides an example usage of the library, allowing command
-line evaluation of natural language.  E.g.:
+The script example.py provides an example usage of the library, allowing 
+command line evaluation of natural language.  E.g.:
 
-python example.py
+$ python example.py
 Usage: example.py <integer to translate> <locale code>
-python example.py 123456 fr_FR
+$ python example.py 123456 fr_FR
 ['cent', 'vingt', 'trois', 'mille', 'quatre', 'cent', 'cinquante', 'six']
-python example.py 123456 en_GB
-['one', 'hundred', 'and', 'twenty', 'three', 'thousand', 'four', 'hundred', 'and', 'fifty', 'six']
+$ python example.py 123456 en_GB
+['one', 'hundred', 'and', 'twenty', 'three', 'thousand', 'four', 'hundred', 
+'and', 'fifty', 'six']
 
-The locale code must match a file in the config directory.
-example.py can be used as a starting point to use the library any way you want.
+- The locale code must match a file in the config directory.
+- example.py can be used as a starting point to use the library any way you 
+  want.
+- If new language rules are required (or amendments are required for existing 
+  ones), browse the language config files, and read about how rules are set up 
+  below.
 
 Motivation
 ----------
@@ -63,19 +68,21 @@ Features
 NaturalNum offers the following:
 
 - Arbitrary mapping of numeric values to lists of string tokens, allowing a 
-rich set of natural language representations
-- Rules-based approach, expressing knowledge of natural languages declaratively.  
-This strategy scales horizontally - the rules for different languages are 
-separately maintained, rather than nested among each other in a single algorithm.
-- Rules are triggered by pattern-matching.  This is a natural choice considering 
-how equivalence classes often depend on the 'place value' of digits.
+  rich set of natural language representations
+- Rules-based approach, expressing knowledge of natural languages 
+  declaratively.  This strategy scales horizontally - the rules for different 
+  languages are separately maintained, rather than nested among each other in a
+  single algorithm.
+- Rules are triggered by pattern-matching.  This is a natural choice 
+  considering how equivalence classes often depend on the 'place value' of 
+  digits.
 - Wildcarding and variable-binding is possible ('digivars').  This allows 
-generic rules to be created for cases where the natural language representation 
-is based on digits within the input value, e.g. when mapping to resource tokens 
-such as audio filenames.
+  generic rules to be created for cases where the natural language 
+  representation is based on digits within the input value, e.g. when mapping 
+  to resource tokens such as audio filenames.
 - Rules can resolve a subset of the input number recursively, to allow reuse.  
-This means the size of the rule-set scales very well with an increasing domain 
-of input numbers.
+  This means the size of the rule-set scales very well with an increasing 
+  domain of input numbers.
 
 Configuration
 -------------
@@ -212,4 +219,104 @@ This is where recursive rules come into the picture.
 
 *** RECURSIVE RULES
 
-TODO
+It would be useful if a rule could defer part of its evaluation to another
+rule.  For example, a number of languages have the same rules for hundreds, 
+tens and units, regardless of where they appear in the value.  More 
+specifically, in English, we should not have to repeat ourselves when we define 
+how the value "34" is represented when evaluating "34,000", "134", or 
+"34,034,034".  The latter case could be decomposed into steps in an informal 
+'rule' as follows:
+
+34,034,034:
++- (34) million
++- (34) thousand
++- and
++- (34)
+
+In all but one of the steps, the value 34 is placed in brackets to show it is 
+delegated to a separate rule which is already defined for 'tens and units'.
+
+This is very similar to how recursive rules work in NaturalNum.  In the example 
+above, the rules for single and double digits were repeated within the rules 
+for hundreds, tens and units.  This would fan out into increasing redundancy as
+values of increasing length are supported.
+
+However, we could change the way three digits are resolved, as follows:
+
+## Single Digits (units)
+u=$u                               ## Units (e.g. 7 = 7.wav)
+
+## Double Digits (tens and units)
+t0=$t0                             ## Exact tens (e.g. 30 = 30.wav)
+1u=1$u                             ## 11-19 (e.g. 19 = 19.wav)
+tu=$t0,$u                          ## Remaining 'tens and units' 
+                                   ## (e.g 56 = 50.wav, 6.wav)
+
+## Three Digits (hundreds, tens and units)
+h00=$h,100                         ## Exact hundreds 
+                                   ## (e.g. 300.wav = 3.wav, 100.wav)
+h0u=$h,100,and,$u                  ## Hundreds and unit with no tens 
+                                   ## (e.g. 709 = 7.wav, 100.wav, and.wav, 
+                                   ## 9.wav)
+htu=$h,100,and,($t$u)              ## Hundreds and tens and units - tens
+                                   ## and units are deferred to a matching
+                                   ## rule
+                                   ## e.g. 546 = 5.wav, 
+                                   ##            100.wav, 
+                                   ##            and.wav, 
+                                   ##            (56)
+                                   ##              = 50.wav, 6.wav
+								   
+The single and double digits are specified as in the previous example.  But 
+there are now only three rules for three digits, instead of five.  This doesn't 
+sound like a huge improvement, but as more digits are added the benefits are 
+compounded (especially when the rules for three digits are re-used in 4+ 
+digits).
+
+The logic here is as follows.  When "546" is resolved, the first rule matched 
+is the final one (matching the pattern "htu").  This resolves to ("5", "100", 
+"and"), but the tens and units are parenthesised, so are resolved recursively.  
+This means that the digits matching "$t$u" ("56") are fed back through the 
+rules, matching the rule with pattern "tu".  This rule would then give the 
+remainder of the result, which is "50", "6".
+
+Conclusion
+----------
+NaturalNum goes a long way towards solving the problem of natural language 
+representation of integer values.  It is not perfect however, as shown by the 
+following issues:
+
+- It is still hard to write new rules.  Defining rules for a new language 
+  requires some study, particularly finding the edge cases and identifying 
+  where candidates for re-use exist.  Validation is time-consuming, perhaps 
+  requiring a native speaker of the language to confirm the details.  This is
+  the nature of the problem domain however.
+- A fairly large assumption is made that only cardinal, nominative numbers 
+  are required to be represented.  This is fine for counting, but if we are 
+  trying to say 'six chairs', then the problem of gender and accusative, 
+  dative, etc. comes into play.  For example, Polish has a table of variations 
+  of the number 1, depending on gender, plurality and cases (nominative,
+  accusative, etc). [1], [2].  This can introduce problems if representing 
+  currency amounts, for example.
+- The project to analyse the suitability of this approach has not progressed 
+  beyond Europe.  It is not yet known how feasible Asian language systems (for 
+  example) would adapt to this scheme.  Either a Romanized system or Unicode 
+  could be used for the representations, but it is not yet known whether the 
+  syntax would lend itself well to the approach taken by NaturalNum.
+  
+Further Work
+------------
+NaturalNum could be developed in the following ways:
+
+- Add new languages, particularly untested classes of language, e.g. Chinese
+- Expose as a web service
+- Extend configuration into the millions, and beyond
+- Create further abstractions to represent variations with respect to the 
+  gender and class of the related noun.  A possible way to capture this:
+
+  1<masc,nomin>=jeden
+  
+References
+----------
+1. http://lightning.prohosting.com/~popolsku/Numerals.htm
+2. http://german.speak7.com/german_cases.htm
