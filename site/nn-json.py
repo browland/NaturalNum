@@ -9,6 +9,8 @@ def callNaturalNum(docRoot, lang, value):
    """ Delegates look-up of natural language represention of digits entered,
        by calling NaturalNum. """
    configFileName = docRoot + "/config/" + lang + ".lang"
+   
+   // todo: Fix so NaturalNum can be bootstrapped one time.
    eng = RuleEngine.fromLangFilename(configFileName)
    return tokensToJson(eng.resolve(value))
 

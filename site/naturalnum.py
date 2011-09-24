@@ -211,8 +211,8 @@ class Rule:
 			raise RuleUsageException("Rule does not match value, cannot resolve")
 		tokenList = []
 		for rhsToken in self.rhsTokenList:
-			logger.debug("replacing [" + value + "] with [" + rhsToken + \
-				"] in context of match regex [" + self.lhsRegex + "]")
+			#logger.debug("replacing [" + value + "] with [" + rhsToken + \
+			#	"] in context of match regex [" + self.lhsRegex + "]")
 			resolvedRhsToken = self.lhsRegexPattern.sub(rhsToken, value)
 			tokenList.append(resolvedRhsToken)
 		return tokenList

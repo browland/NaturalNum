@@ -13,12 +13,20 @@
 
 <script type="text/javascript">
        function handleForm() {
+	      if(document.forms.form0.value.value == "") {
+		    $('#result').html('&nbsp;');
+			return;
+		  }
 		  
           var number = document.forms.form0.value.value;
           var lang = document.forms.form0.language.value;
           var url = 'nn-json.py?value=' + number + '&lang=' + lang
           
           $.getJSON(url, function(json) {
+		     // Ensure the form field hadn't been cleared while the
+			 // response was pending.
+			 if (document.forms.form0.value.value == '') return true;
+		  
           	 var result = '';
           	 for (token in json.tokens) {
           	 	result = result + json.tokens[token] + ' '
@@ -28,6 +36,10 @@
     	    });
 		  return true;
        }
+	   
+	   function validate(myfield, e, dec) {	  
+		  return numbersonly (myfield, e, dec);
+	   }
 	   
 	   /* This script and many more are available free online at
 			The JavaScript Source!! http://javascript.internet.com
@@ -51,8 +63,10 @@
 				return true;
 
 			  // numbers
-			  else if ((("0123456789").indexOf(keychar) > -1))
+			  else if ((("0123456789").indexOf(keychar) > -1)) {
+				if (myfield.value == '0') return false;
 				return true;
+			  }
 
 			  // decimal point jump
 			  else if (dec && (keychar == ".")) {
@@ -78,7 +92,7 @@
 			<table>
 			   <tr>
 			      <td>Number</td>
-				  <td><input type="text" name="value" value="123" onKeyPress="return numbersonly(this, event);" onKeyUp="handleForm()"></input></td>
+				  <td><input type="text" name="value" value="123" onKeyPress="return validate(this, event);" onKeyUp="handleForm()"></input></td>
 			   </tr>
 			   <tr>
     		      <td>Language</td>
