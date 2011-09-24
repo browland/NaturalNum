@@ -21,8 +21,29 @@ p {
 	margin:0px 0px 16px 0px;
 	padding:0px;
 	}
-#Content>p {margin:0px;}
-#Content>p+p {text-indent:30px;}
+#Content>p {
+	margin:5px 0px 0px 0px;
+}
+
+#Content>ul {
+	font:11px/20px verdana, arial, helvetica, sans-serif;
+	margin:10px 0px 10px 30px;
+	padding:0px;
+}
+
+#Content>form {
+	font:11px/20px verdana, arial, helvetica, sans-serif;
+	margin:10px 0px 10px 30px;
+	padding:0px;
+}
+
+#result {
+	padding: 10px;
+	color:#00;
+	border-style:dashed;
+	border-color:#555555;
+	border-width:1px;
+}
 
 a {
 	color:#09c;

@@ -6,33 +6,14 @@
 <head> 
 <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" /> 
 <title>NaturalNum Project Page</title> 
+
 <style type="text/css" media="all">@import "layout1.css";</style> 
+
 <script src="jquery.js"></script>
-</head> 
- 
-<body> 
- 
-<div id="Header"><a href="index.html" title="NaturalNum Project Page">NaturalNum</a></div> 
- 
-<div id="Content"> 
-	<h1>NaturalNum Demo</h1> 
-	
-	   <form id="form0">
-    		Number: 
-    			<input type="text" name="value" onkeyup="handleForm()"></input>
-    		<br />
-    		Language: 
-    			<select name="language">
-    				<option value="en_GB">en_GB</option>
-    				<option value="fr_FR">fr_FR</option>
-    			</select>
-    	</form>
-    
-    <p>Result:</p>
-    <div id="result"></div>
-    
-    <script type="text/javascript">
+
+<script type="text/javascript">
        function handleForm() {
+		  
           var number = document.forms.form0.value.value;
           var lang = document.forms.form0.language.value;
           var url = 'nn-json.py?value=' + number + '&lang=' + lang
@@ -45,8 +26,76 @@
           
              $('#result').html(result);
     	    });
+		  return true;
        }
+	   
+	   /* This script and many more are available free online at
+			The JavaScript Source!! http://javascript.internet.com
+			Copyright 1999 Idocs, Inc. http://www.idocs.com
+			Distribute this script freely but keep this notice in place */
+
+			function numbersonly(myfield, e, dec) {
+			  var key;
+			  var keychar;
+
+			  if (window.event)
+				key = window.event.keyCode;
+			  else if (e)
+				key = e.which;
+			  else
+				return true;
+			  keychar = String.fromCharCode(key);
+
+			  // control keys
+			  if ((key==null) || (key==0) || (key==8) || (key==9) || (key==13) || (key==27) )
+				return true;
+
+			  // numbers
+			  else if ((("0123456789").indexOf(keychar) > -1))
+				return true;
+
+			  // decimal point jump
+			  else if (dec && (keychar == ".")) {
+				myfield.form.elements[dec].focus();
+				return false;
+			  } else
+				return false;
+			}
+
     </script>
+</head> 
+ 
+<body onload="handleForm()"> 
+ 
+<div id="Header"><a href="index.html" title="NaturalNum Project Page">NaturalNum</a></div> 
+ 
+<div id="Content"> 
+	<h1>NaturalNum Demo</h1> 
+	
+	<p>Enter digits into the field below, and select a language.  The textual representation will automatically update.</p>
+	
+	   <form id="form0">
+			<table>
+			   <tr>
+			      <td>Number</td>
+				  <td><input type="text" name="value" value="123" onKeyPress="return numbersonly(this, event);" onKeyUp="handleForm()"></input></td>
+			   </tr>
+			   <tr>
+    		      <td>Language</td>
+				  <td>
+    			     <select name="language" onChange="handleForm()">
+    				    <option value="en_GB">en_GB</option>
+    				    <option value="fr_FR">fr_FR</option>
+    			     </select>
+			      </td>
+			 </table>
+			   </tr>
+    	</form>
+    
+	<p>Result:</p>
+    <div id="result"></div>
+    
+    
 </div> 
  
 <div id="Menu"> 
