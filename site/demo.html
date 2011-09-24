@@ -19,7 +19,7 @@
 	
 	   <form id="form0">
     		Number: 
-    			<input type="text" name="number" onkeyup="handleForm()"></input>
+    			<input type="text" name="value" onkeyup="handleForm()"></input>
     		<br />
     		Language: 
     			<select name="language">
@@ -33,9 +33,9 @@
     
     <script type="text/javascript">
        function handleForm() {
-          var number = document.forms.form0.number.value;
+          var number = document.forms.form0.value.value;
           var lang = document.forms.form0.language.value;
-          var url = 'nn-json.py?number=' + number + '&lang=' + lang
+          var url = 'nn-json.py?value=' + number + '&lang=' + lang
           
           $.getJSON(url, function(json) {
           	 var result = '';
