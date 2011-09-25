@@ -4,6 +4,7 @@ import glob
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from os.path import basename
 
 from naturalnum import *
 
@@ -13,7 +14,7 @@ engines = {}
 ## Build the Rule Engines by scanning the config file directory
 path = 'config/'
 for infile in glob.glob( os.path.join(path, '*.lang') ):
-    lang = infile.split('.')[0].split('\\')[1]
+    lang = os.path.splitext(basename(infile))[0]
     eng = RuleEngine.fromLangFilename(infile)
     engines[lang] = eng
 
