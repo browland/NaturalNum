@@ -12,5 +12,5 @@ handlers:
   static_files: \1
   upload: (.*\.(html|css|js))
   
-- url: /nn-json.py
-  script: nn-json.py
+- url: /nnjson.py
+  script: nnjson.py

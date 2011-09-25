@@ -20,7 +20,7 @@
 		  
           var number = document.forms.form0.value.value;
           var lang = document.forms.form0.language.value;
-          var url = 'nn-json.py?value=' + number + '&lang=' + lang
+          var url = 'nnjson.py?value=' + number + '&lang=' + lang
           
           $.getJSON(url, function(json) {
 		     // Ensure the form field hadn't been cleared while the
