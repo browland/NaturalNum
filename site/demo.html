@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"> 
  
 <head> 
-<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" /> 
+<meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
 <title>NaturalNum Project Page</title> 
 
 <style type="text/css" media="all">@import "layout1.css";</style> 
@@ -100,6 +100,7 @@
     			     <select name="language" onChange="handleForm()">
     				    <option value="en_GB">English</option>
     				    <option value="fr_FR">French</option>
+						<option value="de_DE">German</option>
     			     </select>
 			      </td>
 			 </table>
@@ -108,6 +109,18 @@
     
 	<p>Result:</p>
     <div id="result"></div>
+	
+	<div id="todo">
+	   <p><em>Todo</em></p>
+	   <ul>
+	      <li><del>Fix a multitude of AJAX bugs</del></li>
+	      <li>Unicode Support (Very important!  Right now, characters which extend outside the ASCII set are mapped to their nearest visual equivalent.  For example, &szlig; is mapped to B, &uuml; to u, and so on.</li>
+		  <li>Allow single tokens to be composed from multiple rules.  For example, the German rules compose the words for 13, 14, etc as:
+		      <code>1u=($u),zehn</code>
+		      which results in "drei zehn", "vier zehn", but both of these should be a single word.  Simply omitting the comma in the expression will result in a parse error, because recursed (parenthesised) terms cannot be mixed with static ones.
+		  </li>
+	   </ul>
+	</div>
     
     
 </div> 
