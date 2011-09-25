@@ -71,6 +71,11 @@ em {
    font-style: normal;
 }
 
+td {
+   padding-right: 25px;
+   padding-bottom: 15px;
+}
+
 #Header {
 	margin:50px 0px 10px 0px;
 	padding:17px 0px 0px 20px;

@@ -1,0 +1,61 @@
+## Units
+0=null
+1=eins
+2=zwei
+3=drei
+4=vier
+5=funf
+6=sechs
+7=sieben
+8=acht
+9=neun
+
+## 10-19
+10=zehn
+11=elf
+12=zwolf
+17=siebzehn
+1u=($u),zehn
+
+## Exact tens
+20=zwanzig
+30=dreiBig
+40=vierzig
+50=funfzig
+60=sechzig
+70=siebzig
+80=achtzig
+90=neunzig
+
+## Tens and Units
+t1=ein,und,($t0)  ## Special case
+tu=($u),und,($t0)
+
+## Exact Hundreds
+100=hundert
+h00=($h),hundert
+
+## Hundreds and Units
+h0u=($h00),($u)
+
+## Hundreds, Tens and Units
+htu=($h00),($t$u)
+
+## Exact Thousands
+1000=tausend
+T000=($T),tausend
+
+## Thousands and Units
+T00u=($T000),($u)
+
+## Thousands, Tens and Units
+T0tu=($T000),($t$u)
+
+## Thousands, Hundreds and Units
+Thtu=($T000),($h$t$u)
+
+## Tens of Thousands
+EThtu=($E$T),tausend,($h$t$u)
+
+## Hundreds of Thousands
+HEThtu=($H$E$T),tausend,($h$t$u)

@@ -18,8 +18,18 @@
 			return;
 		  }
 		  
+		  // Get selected radio button
+		  var lang = null;
+		  var radio = document.forms.form0.language;
+          for (var i=0; i<radio.length; i++) {
+               if (radio[i].checked) {
+                    lang = radio[i].value;
+                    break ;
+               }
+          }
+		  
           var number = document.forms.form0.value.value;
-          var lang = document.forms.form0.language.value;
+          //var lang = document.forms.form0.language.value;
           var url = 'nnjson.py?value=' + number + '&lang=' + lang
           
           $.getJSON(url, function(json) {
@@ -90,21 +100,25 @@
 	
 	   <form id="form0">
 			<table>
-			   <tr>
-			      <td>Number</td>
-				  <td><input type="text" name="value" value="123" maxlength="6" onKeyPress="return validate(this, event);" onKeyUp="handleForm()"></input></td>
-			   </tr>
-			   <tr>
-    		      <td>Language</td>
+				<tr>
 				  <td>
-    			     <select name="language" onChange="handleForm()">
-    				    <option value="en_GB">English</option>
-    				    <option value="fr_FR">French</option>
-						<option value="de_DE">German</option>
-    			     </select>
-			      </td>
-			 </table>
-			   </tr>
+			         Number
+				  </td>
+				  <td>
+				     <input type="text" name="value" value="123" maxlength="6" onKeyPress="return validate(this, event);" onKeyUp="handleForm()"></input>
+				  </td>
+				</tr>
+				<tr>
+				   <td>
+				      Language
+				   </td>
+				   <td>
+				      <input type="radio" name="language" value="en_GB" CHECKED onclick="handleForm()">English</input>
+				      <input type="radio" name="language" value="fr_FR" onclick="handleForm()">French</input>
+				      <input type="radio" name="language" value="de_DE" onclick="handleForm()">German</input>
+			       </td>
+				</tr>
+		    </table>
     	</form>
     
 	<p>Result:</p>

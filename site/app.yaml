@@ -8,9 +8,9 @@ handlers:
   static_files: index.html
   upload: (.*\.(html|css|js))
   
-- url: /(.*\.(html|css|js))
+- url: /(.*\.(html|css|js|txt))
   static_files: \1
-  upload: (.*\.(html|css|js))
+  upload: (.*\.(html|css|js|txt))
   
 - url: /nnjson.py
   script: nnjson.py
