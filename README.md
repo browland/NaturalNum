@@ -187,27 +187,27 @@ extension to each of the generated tokens)
 
 ```python
 ## Single Digits (units)
-u=\$u                              ## Units (e.g. 7 = 7.wav)
+u=$u                               ## Units (e.g. 7 = 7.wav)
 
 ## Double Digits (tens and units)
-t0=\$t0                            ## Exact tens (e.g. 30 = 30.wav)
-1u=1\$u                            ## 11-19 (e.g. 19 = 19.wav)
-tu=\$t0,\$u                        ## Remaining 'tens and units' 
+t0=$t0                             ## Exact tens (e.g. 30 = 30.wav)
+1u=1$u                             ## 11-19 (e.g. 19 = 19.wav)
+tu=$t0,$u                          ## Remaining 'tens and units' 
                                    ## (e.g 56 = 50.wav, 6.wav)
 
 ## Three Digits (hundreds, tens and units)
-h00=\$h,100                        ## Exact hundreds 
+h00=$h,100                         ## Exact hundreds 
                                    ## (e.g. 300.wav = 3.wav, 100.wav)
-h0u=\$h,100,and,\$u                ## Hundreds and unit with no tens 
+h0u=$h,100,and,$u                  ## Hundreds and unit with no tens 
                                    ## (e.g. 709 = 7.wav, 100.wav, and.wav, 
                                    ## 9.wav)
-ht0=\$h,100,and,\$t0               ## Hundreds and exact tens 
+ht0=$h,100,and,$t0                 ## Hundreds and exact tens 
                                    ## (e.g. 850 = 8.wav, 100.wav, and.wav, 
                                    ## 50.wav)
-h1u=\$h,100,and,1\$u               ## Hundreds and 11-19 
+h1u=$h,100,and,1$u                 ## Hundreds and 11-19 
                                    ## (e.g. 218 = 2.wav, 100.wav, and.wav, 
                                    ## 18.wav)
-htu=\$h,100,and,\$t0,\$u           ## Hundreds and remaining tens and units 
+htu=$h,100,and,$t0,$u              ## Hundreds and remaining tens and units 
                                    ## (e.g. 546 = 5.wav, 100.wav, and.wav, 
                                    ## 50.wav, 6.wav)
 ```
@@ -250,21 +250,21 @@ However, we could change the way three digits are resolved, as follows:
 
 ```python
 ## Single Digits (units)
-u=\$u                              ## Units (e.g. 7 = 7.wav)
+u=$u                               ## Units (e.g. 7 = 7.wav)
 
 ## Double Digits (tens and units)
-t0=\$t0                            ## Exact tens (e.g. 30 = 30.wav)
-1u=1\$u                            ## 11-19 (e.g. 19 = 19.wav)
-tu=\$t0,\$u                        ## Remaining 'tens and units' 
+t0=$t0                             ## Exact tens (e.g. 30 = 30.wav)
+1u=1$u                             ## 11-19 (e.g. 19 = 19.wav)
+tu=$t0,$u                          ## Remaining 'tens and units' 
                                    ## (e.g 56 = 50.wav, 6.wav)
 
 ## Three Digits (hundreds, tens and units)
-h00=\$h,100                        ## Exact hundreds 
+h00=$h,100                         ## Exact hundreds 
                                    ## (e.g. 300.wav = 3.wav, 100.wav)
-h0u=\$h,100,and,\$u                ## Hundreds and unit with no tens 
+h0u=$h,100,and,$u                  ## Hundreds and unit with no tens 
                                    ## (e.g. 709 = 7.wav, 100.wav, and.wav, 
                                    ## 9.wav)
-htu=\$h,100,and,(\$t\$u)           ## Hundreds and tens and units - tens
+htu=$h,100,and,($t$u)              ## Hundreds and tens and units - tens
                                    ## and units are deferred to a matching
                                    ## rule
                                    ## e.g. 546 = 5.wav, 
