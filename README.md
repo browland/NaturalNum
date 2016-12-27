@@ -107,7 +107,7 @@ The left-hand and right-hand sides of each rule are separated by '='.
 A very simple example rule for English follows (note that '#' indicates the 
 beginning of a comment, which is ignored by the reader):
 
-```21=twenty,one     ## rule for 21```
+`21=twenty,one     ## rule for 21`
 
 The list of tokens on the right-hand-side can be anything, so they could be 
 used to identify resources, e.g. audio files containing spoken utterences for 
@@ -140,7 +140,7 @@ freely with literal values on the right-hand side of a rule.
 For example, we can simplify the rules previously given for 0-9, as a single 
 rule:
 
-```u=$u.wav```
+`u=$u.wav`
 
 Any single digit value (0-9) will match this rule.  The single digit in the 
 matched numeric value will be bound to the digivar 'u' (any alphabetic 
