@@ -185,7 +185,7 @@ specify the file extension (.wav) on the right-hand side of each rule (in
 practice it would be straightforward for a calling application to append the 
 extension to each of the generated tokens)
 
-```python
+```
 ## Single Digits (units)
 u=$u                               ## Units (e.g. 7 = 7.wav)
 
@@ -248,7 +248,7 @@ values of increasing length are supported.
 
 However, we could change the way three digits are resolved, as follows:
 
-```python
+```
 ## Single Digits (units)
 u=$u                               ## Units (e.g. 7 = 7.wav)
 
