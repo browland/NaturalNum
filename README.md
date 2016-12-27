@@ -1,17 +1,18 @@
-NaturalNum
-==========
+# NaturalNum
+
+[Demo Site](http://natural-num.appspot.com/demo.html)
 
 A python module for easy conversion of numeric values to natural language with 
 full internationalization.  E.g. "2100" can be mapped to 
 "two thousand one hundred", "deux mille cent", "2.wav,1000.wav,1.wav,100.wav", 
 or any other representation, according to rules-based configuration.
 
-Quick Start
------------
+## Quick Start
 
 The script example.py provides an example usage of the library, allowing 
 command line evaluation of natural language.  E.g.:
 
+```
 $ python example.py
 Usage: example.py <integer to translate> <locale code>
 $ python example.py 123456 fr_FR
@@ -19,16 +20,16 @@ $ python example.py 123456 fr_FR
 $ python example.py 123456 en_GB
 ['one', 'hundred', 'and', 'twenty', 'three', 'thousand', 'four', 'hundred', 
 'and', 'fifty', 'six']
+```
 
-- The locale code must match a file in the config directory.
-- example.py can be used as a starting point to use the library any way you 
+* The locale code must match a file in the config directory.
+* example.py can be used as a starting point to use the library any way you 
   want.
-- If new language rules are required (or amendments are required for existing 
+* If new language rules are required (or amendments are required for existing 
   ones), browse the language config files, and read about how rules are set up 
   below.
 
-Motivation
-----------
+## Motivation
 
 Generation of natural language - even just for numbers - can be complex.  
 Generally, in natural languages a number is represented as a series of words 
@@ -62,32 +63,30 @@ But in German it is "einundzwanzig" ("one and twenty").  Furthermore, the
 German rendering is a single word, whereas the English is two separate words.  
 Further complexities can be found in all languages.
 
-Features
---------
+## Features
 
 NaturalNum offers the following:
 
-- Arbitrary mapping of numeric values to lists of string tokens, allowing a 
+* Arbitrary mapping of numeric values to lists of string tokens, allowing a 
   rich set of natural language representations
-- Rules-based approach, expressing knowledge of natural languages 
+* Rules-based approach, expressing knowledge of natural languages 
   declaratively.  This strategy scales horizontally - the rules for different 
   languages are separately maintained, rather than nested among each other in a
   single algorithm.
-- Rules are triggered by pattern-matching.  This is a natural choice 
+* Rules are triggered by pattern-matching.  This is a natural choice 
   considering how equivalence classes often depend on the 'place value' of 
   digits.
-- Wildcarding and variable-binding is possible ('digivars').  This allows 
+* Wildcarding and variable-binding is possible ('digivars').  This allows 
   generic rules to be created for cases where the natural language 
   representation is based on digits within the input value, e.g. when mapping 
   to resource tokens such as audio filenames.
-- Rules can resolve a subset of the input number recursively, to allow reuse.  
+* Rules can resolve a subset of the input number recursively, to allow reuse.  
   This means the size of the rule-set scales very well with an increasing 
   domain of input numbers.
 
-Configuration
--------------
+## Configuration
 
-*** BASICS
+### Basics
 
 Each supported natural language must be configured with rules; sample languages 
 are provided in config/.  
@@ -108,18 +107,20 @@ The left-hand and right-hand sides of each rule are separated by '='.
 A very simple example rule for English follows (note that '#' indicates the 
 beginning of a comment, which is ignored by the reader):
 
-21=twenty,one     ## rule for 21
+```21=twenty,one     ## rule for 21```
 
 The list of tokens on the right-hand-side can be anything, so they could be 
 used to identify resources, e.g. audio files containing spoken utterences for 
 playback.  A very simple example mapping the digits 0-9 to a corresponding 
 audio filename is given below:
 
+```python
 0=0.wav           ## an input of "0" is matched, and mapped to the output 
                   ## string "0.wav"
 1=1.wav           ## "1" -> "1.wav"
                   ## (...)
 9=9.wav           ## "9" -> "9.wav"
+```
 
 So far this does not seem too interesting; it is just a simple lookup table 
 mapping literal numeric values to literal strings.  It would not scale, and 
@@ -127,7 +128,7 @@ there would be a lot of repetition.
 
 However, there is a way to make these rules more compact.
 
-*** DIGIVARS
+### Digivars
 
 A digivar is a wildcard character which, when appearing on the left-hand side 
 of a rule will match any single digit in the same position.  What makes 
@@ -139,7 +140,7 @@ freely with literal values on the right-hand side of a rule.
 For example, we can simplify the rules previously given for 0-9, as a single 
 rule:
 
-u=$u.wav
+```u=$u.wav```
 
 Any single digit value (0-9) will match this rule.  The single digit in the 
 matched numeric value will be bound to the digivar 'u' (any alphabetic 
@@ -150,13 +151,13 @@ digit matched to digivar 'u', followed by '.wav'.  So '1' would resolve to
 
 There are a few restrictions to the use of digivars:  
 
-- A digivar can only be a single alphabetic character (this makes the 
+* A digivar can only be a single alphabetic character (this makes the 
 left-hand-side value easier to read from a pattern-matching perspective).  If 
 several alphabetic characters appear on the left-hand side in sequence, it will 
 be assumed they are seperate single-character digivars.
-- Digivars must be alphabetic characters (case-sensitive), to distinguish from 
+* Digivars must be alphabetic characters (case-sensitive), to distinguish from 
 literal digits.  
-- The same digivar cannot be used more than once on the left-hand-side (you 
+* The same digivar cannot be used more than once on the left-hand-side (you 
 cannot bind the same digivar to more than one digit).
 
 It is perhaps intuitive that digivars are scoped only to the single rule they 
@@ -173,10 +174,10 @@ example of how we might continue the previous examples as far as 0-999 using
 digivars.  Note that for the remainder of this example, we will define a 
 minimal vocabulary of audio filenames to be the following:
 
-- 0.wav, 1.wav, ..., 19.wav
-- 20.wav, 30.wav, up to 90.wav
-- 100.wav (represents "hundred", not "one hundred")
-- and.wav (linking word)
+* 0.wav, 1.wav, ..., 19.wav
+* 20.wav, 30.wav, up to 90.wav
+* 100.wav (represents "hundred", not "one hundred")
+* and.wav (linking word)
 
 The limited vocabularly means we will have to compose tokens together in 
 sequence on the right-hand side, where necessary.  For clarity, we will not 
@@ -184,6 +185,7 @@ specify the file extension (.wav) on the right-hand side of each rule (in
 practice it would be straightforward for a calling application to append the 
 extension to each of the generated tokens)
 
+```python
 ## Single Digits (units)
 u=$u                               ## Units (e.g. 7 = 7.wav)
 
@@ -208,6 +210,7 @@ h1u=$h,100,and,1$u                 ## Hundreds and 11-19
 htu=$h,100,and,$t0,$u              ## Hundreds and remaining tens and units 
                                    ## (e.g. 546 = 5.wav, 100.wav, and.wav, 
                                    ## 50.wav, 6.wav)
+```
 
 This is some good progress; we have specified the natural language rules for 
 all numbers 0-999 in 9 rules.  However this is not perfect, as there is some 
@@ -217,7 +220,7 @@ would fan out as patterns for more digits are provided.
 
 This is where recursive rules come into the picture.
 
-*** RECURSIVE RULES
+### Recursive Rules
 
 It would be useful if a rule could defer part of its evaluation to another
 rule.  For example, a number of languages have the same rules for hundreds, 
@@ -227,11 +230,13 @@ how the value "34" is represented when evaluating "34,000", "134", or
 "34,034,034".  The latter case could be decomposed into steps in an informal 
 'rule' as follows:
 
+```
 34,034,034:
 +- (34) million
 +- (34) thousand
 +- and
 +- (34)
+```
 
 In all but one of the steps, the value 34 is placed in brackets to show it is 
 delegated to a separate rule which is already defined for 'tens and units'.
@@ -243,6 +248,7 @@ values of increasing length are supported.
 
 However, we could change the way three digits are resolved, as follows:
 
+```python
 ## Single Digits (units)
 u=$u                               ## Units (e.g. 7 = 7.wav)
 
@@ -266,6 +272,7 @@ htu=$h,100,and,($t$u)              ## Hundreds and tens and units - tens
                                    ##            and.wav, 
                                    ##            (56)
                                    ##              = 50.wav, 6.wav
+```
 								   
 The single and double digits are specified as in the previous example.  But 
 there are now only three rules for three digits, instead of five.  This doesn't 
@@ -280,43 +287,43 @@ This means that the digits matching "$t$u" ("56") are fed back through the
 rules, matching the rule with pattern "tu".  This rule would then give the 
 remainder of the result, which is "50", "6".
 
-Conclusion
-----------
-NaturalNum goes a long way towards solving the problem of natural language 
+### Conclusion
+
+NaturalNum goes some way towards solving the problem of natural language 
 representation of integer values.  It is not perfect however, as shown by the 
 following issues:
 
-- It is still hard to write new rules.  Defining rules for a new language 
+* It is still hard to write new rules.  Defining rules for a new language 
   requires some study, particularly finding the edge cases and identifying 
   where candidates for re-use exist.  Validation is time-consuming, perhaps 
   requiring a native speaker of the language to confirm the details.  This is
   the nature of the problem domain however.
-- A fairly large assumption is made that only cardinal, nominative numbers 
+* A fairly large assumption is made that only cardinal, nominative numbers 
   are required to be represented.  This is fine for counting, but if we are 
   trying to say 'six chairs', then the problem of gender and accusative, 
   dative, etc. comes into play.  For example, Polish has a table of variations 
   of the number 1, depending on gender, plurality and cases (nominative,
   accusative, etc). [1], [2].  This can introduce problems if representing 
   currency amounts, for example.
-- The project to analyse the suitability of this approach has not progressed 
+* The project to analyse the suitability of this approach has not progressed 
   beyond Europe.  It is not yet known how feasible Asian language systems (for 
   example) would adapt to this scheme.  Either a Romanized system or Unicode 
   could be used for the representations, but it is not yet known whether the 
   syntax would lend itself well to the approach taken by NaturalNum.
   
-Further Work
-------------
+### Further Work
+
 NaturalNum could be developed in the following ways:
 
-- Add new languages, particularly untested classes of language, e.g. Chinese
-- Expose as a web service
-- Extend configuration into the millions, and beyond
-- Create further abstractions to represent variations with respect to the 
+* Add new languages, particularly untested classes of language, e.g. Chinese
+* Expose as a web service
+* Extend configuration into the millions, and beyond
+* Create further abstractions to represent variations with respect to the 
   gender and class of the related noun.  A possible way to capture this:
 
   1<masc,nomin>=jeden
   
-References
-----------
+### References
+
 1. http://lightning.prohosting.com/~popolsku/Numerals.htm
 2. http://german.speak7.com/german_cases.htm
